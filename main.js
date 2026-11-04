@@ -1,31 +1,30 @@
-//alert(25)
+'use strict';
 
-const nombre = prompt("¿Cuál es tu nombre?")
-const apellidoP = prompt("¿Cuál es tu apellido Paterno?")
-const apellidoM = prompt("¿Cuál es tu Apellido Materno?")
-
-const nota1 = parseFloat(prompt("Ingresa tu primer nota"))
-const nota2 = parseFloat(prompt("Ingresa tu segunda nota"))
-const nota3 = parseFloat(prompt("Ingresa tu tercera nota"))
-
-const promedio = (nota1 + nota2 + nota3) / 3
-
-function calcularPromedio(){
-    document.getElementById("resultado").innerHTML =
-    "Hola tu promedio es: " + promedio.toFixed(1);
-
+function clasificarPromedio(promedio) {
+  if (promedio < 60) return 'NO APROBADO';
+  if (promedio < 75) return 'SUFICIENTE';
+  if (promedio < 90) return 'BIEN';
+  return 'EXCELENTE';
 }
 
-if(promedio < 60) {
-    document.write(`Hola ${nombre} ${apellidoP} ${apellidoM}, tu promedio es: ${promedio.toFixed(1)} "NO APROBADO"`)
-    console.log(`Hola ${nombre} ${apellidoP} ${apellidoM}, tu promedio es: ${promedio.toFixed(1)} "NO APROBADO"`)
-}else if(promedio >= 60 && promedio <= 74) {
-    document.write(`Hola ${nombre} ${apellidoP} ${apellidoM}, tu promedio es: ${promedio.toFixed(1)} Aprobado con "SUFICIENTE"`)
-    console.log(`Hola ${nombre} ${apellidoP} ${apellidoM}, tu promedio es: ${promedio.toFixed(1)} Aprobado con "SUFICIENTE"`)
-}else if(promedio >= 75 && promedio <= 89) {
-    document.write(`Hola ${nombre} ${apellidoP} ${apellidoM}, tu promedio es: ${promedio.toFixed(1)} Aprobado con "BIEN"`)
-    console.log(`Hola ${nombre} ${apellidoP} ${apellidoM}, tu promedio es: ${promedio.toFixed(1)} Aprobado con "BIEN"`)
-}else if(promedio >= 90 && promedio <= 100) {
-    document.write(`Hola ${nombre} ${apellidoP} ${apellidoM}, tu promedio es: ${promedio.toFixed(1)} Aprobado con "EXCELENTE"`)
-    console.log(`Hola ${nombre} ${apellidoP} ${apellidoM}, tu promedio es: ${promedio.toFixed(1)} Aprobado con "EXCELENTE"`)
+function calcularPromedio() {
+  const resultado = document.getElementById('resultado');
+  const nombre = ['nombre', 'apellidoP', 'apellidoM']
+    .map(id => document.getElementById(id).value.trim())
+    .filter(Boolean).join(' ');
+  const ids = ['nota1', 'nota2', 'nota3'];
+  const valores = ids.map(id => document.getElementById(id).value.trim());
+  if (valores.some(valor => valor === '')) {
+    resultado.textContent = 'Ingresa las tres notas para calcular el promedio.';
+    return;
+  }
+  const notas = valores.map(Number);
+  if (notas.some(nota => !Number.isFinite(nota) || nota < 0 || nota > 100)) {
+    resultado.textContent = 'Las notas deben ser números entre 0 y 100.';
+    return;
+  }
+  const promedio = notas.reduce((suma, nota) => suma + nota, 0) / 3;
+  const saludo = nombre ? 'Hola ' + nombre + ', ' : '';
+  resultado.textContent = saludo + 'tu promedio es: ' + promedio.toFixed(1) +
+    ' — ' + clasificarPromedio(promedio);
 }
