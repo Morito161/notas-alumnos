@@ -1,0 +1,73 @@
+name: Student grade security tests
+on:
+  pull_request:
+  push:
+    branches: [master]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate JavaScript syntax and security invariants
+        run: |
+          node --check main.js
+          node <<'JS'
+          const fs=require('node:fs');
+          const assert=require('node:assert/strict');
+          const js=fs.readFileSync('main.js','utf8');
+          assert.ok(js.includes('resultado.textContent'));
+          assert.ok(!js.includes('document.write'));
+          assert.ok(!js.includes('innerHTML'));
+          assert.ok(!js.includes('prompt('));
+          console.log('Static security checks passed');
+          JS
+      - name: Install Chromium
+        run: |
+          npm install --no-save --package-lock=false playwright@1.58.2
+          npx playwright install --with-deps chromium
+      - name: Test grades, validation and HTML injection in browser
+        run: |
+          node <<'JS'
+          const {chromium}=require('playwright');
+          const assert=require('node:assert/strict');
+          const path=require('node:path');
+          (async()=>{
+            const browser=await chromium.launch({headless:true});
+            try {
+              const page=await browser.newPage();
+              const errors=[];
+              page.on('pageerror',error=>errors.push(error.message));
+              await page.goto('file://'+path.resolve('index.html'));
+              async function grade(a,b,c){
+                await page.locator('#nota1').fill(String(a));
+                await page.locator('#nota2').fill(String(b));
+                await page.locator('#nota3').fill(String(c));
+                await page.getByRole('button',{name:'Calcular Promedio'}).click();
+                return await page.locator('#resultado').textContent();
+              }
+              assert.match(await grade(59,59,59),/59\.0.*NO APROBADO/);
+              assert.match(await grade(60,60,60),/60\.0.*SUFICIENTE/);
+              assert.match(await grade(75,75,75),/75\.0.*BIEN/);
+              assert.match(await grade(90,90,90),/90\.0.*EXCELENTE/);
+              assert.match(await grade(100,100,100),/100\.0.*EXCELENTE/);
+              await page.locator('#nota1').fill('');
+              await page.getByRole('button',{name:'Calcular Promedio'}).click();
+              assert.match(await page.locator('#resultado').textContent(),/Ingresa las tres notas/);
+              assert.match(await grade(-1,60,60),/entre 0 y 100/);
+              assert.match(await grade(101,60,60),/entre 0 y 100/);
+              const payload='<img src=x onerror=alert(1)>';
+              await page.locator('#nombre').fill(payload);
+              assert.match(await grade(90,90,90),/EXCELENTE/);
+              assert.ok((await page.locator('#resultado').textContent()).includes(payload));
+              assert.equal(await page.locator('#resultado img').count(),0,'User input must not become HTML');
+              assert.deepEqual(errors,[]);
+              console.log('Grade boundaries, invalid input and HTML injection checks passed');
+            } finally {await browser.close();}
+          })().catch(error=>{console.error(error);process.exit(1)});
+          JS
