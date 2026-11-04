@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Notas Alumnos</title>
+    <meta name="referrer" content="no-referrer">
     <link rel="shortcut icon" href="./evaluation.png" type="image/x-icon">
     <link rel="stylesheet" href="./style.css">
 </head>
@@ -21,13 +22,13 @@
     </ul>
 
     <label for="nombre">Nombre(s):</label>
-    <input type="text" id="nombre" name="nombre"><br><br>
+    <input type="text" id="nombre" name="nombre" maxlength="100"><br><br>
 
     <label for="apellidoP">Apellido Paterno:</label>
-    <input type="text" id="apellidoP" name="apellidoP"><br><br>
+    <input type="text" id="apellidoP" name="apellidoP" maxlength="100"><br><br>
 
     <label for="apellidoM">Apellido Materno:</label>
-    <input type="text" id="apellidoM" name="apellidoM"><br><br>
+    <input type="text" id="apellidoM" name="apellidoM" maxlength="100"><br><br>
 
     <label for="nota1">Escribe tu nota 1:</label>
     <input type="number" id="nota1" name="nota1" min="0" max="100"><br><br>
@@ -42,7 +43,7 @@
 <br><br>
     <script src="./main.js"></script>
 
-    <h2 id="resultado"></h2>
+    <h2 id="resultado" role="status" aria-live="polite"></h2>
 
 </body>
 </html>
